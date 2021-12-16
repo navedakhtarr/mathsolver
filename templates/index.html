@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>IC</title>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js"
+      integrity="sha256-WVsM3xrcqyuFNF3W1qtIKbHFsD0977nDQA8DCMp1zCw="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"
+      integrity="sha256-2/3R3NV5zryj0fDjD3cDh+SNiWQ/TJiMVZzAo5FrhiU="
+      crossorigin="anonymous"
+    ></script>
+
+    <style>
+      html {
+        box-sizing: border-box;
+        font-family: "Open Sans", sans-serif;
+      }
+
+      *,
+      *::after,
+      *::before {
+        box-sizing: inherit;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      input,
+      button,
+      textarea,
+      select {
+        color: inherit;
+        font: inherit;
+        letter-spacing: inherit;
+      }
+
+      input,
+      textarea,
+      button {
+        /* border: 1px solid gray; */
+        border: none;
+        outline: none;
+      }
+
+      #root,
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        outline: none;
+        box-sizing: border-box;
+      }
+
+      #container {
+        margin-top: 200px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .draw {
+        border: 1px solid #000;
+        margin-right: 5px;
+      }
+      .f-vcenter {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .f-col {
+        flex-direction: column;
+      }
+      .btn-wrapper {
+        margin-left: 25px;
+      }
+      .btn-wrapper > button {
+        width: 100px;
+        height: 40px;
+        outline: none;
+        border: none;
+        border-radius: 4px;
+        background-color: black;
+        color: white;
+        font-size: 14px;
+      }
+      .output {
+        width: 100%;
+        height: 100%;
+        overflow: none;
+        padding: 20px;
+      }
+      .output > .title {
+        display: inline-block;
+        font-size: 16px;
+        font-family: monospace;
+        margin-bottom: 8px;
+      }
+      .output-container {
+        min-width: 100px;
+        min-height: 100px;
+        border: 2px solid rgba(199, 199, 199, 0.721);
+        font-size: 20px; /* change this to change the font size of output */
+        font-family: monospace;
+      }
+      .output-wrapper {
+        padding: 20px calc((100vw - 856px) / 2);
+      }
+    </style>
+  </head>
+  <body onload="onLoad()">
+    <div id="container">
+      <div id="operation" class="draw"></div>
+      <div class="btn-wrapper f-vcenter f-col">
+        <button id="clear" type="button">Clear</button><br />
+        <button type="button" onclick="predict()">Predict</button>
+      </div>
+    </div>
+    <div class="output-wrapper f-vcenter">
+      <div class="output">
+        <span class="title">Operation: </span>
+        <div class="output-container" id="operation-container"></div>
+      </div>
+
+      <div class="output">
+        <span class="title">Solution: </span>
+        <div class="output-container" id="solution-container"></div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      let p5Obj;
+      const s = (p) => {
+        p.setup = () => {
+          p.createCanvas(600, 200);
+          p.background(255);
+          document.getElementById("clear").onclick = () => {
+            p.background(255);
+          };
+        };
+
+        p.draw = () => {};
+
+        p.mouseDragged = () => {
+          p.stroke(0);
+          p.strokeWeight(3);
+          p.line(p.mouseX, p.mouseY, p.pmouseX, p.pmouseY);
+        };
+      };
+
+      function onLoad() {
+        p5Obj = new p5(s, "operation");
+      }
+
+      function predict() {
+        const canvasD1 = document.getElementById("defaultCanvas0");
+        const base64CanvasD1 = canvasD1
+          .toDataURL("image/png")
+          .replace("data:image/png;base64,", "");
+
+        const data = {
+          operation: base64CanvasD1,
+        };
+
+        $.ajax({
+          url: "/predict",
+          type: "POST",
+          data,
+        })
+          .done(function (data) {
+            let result = JSON.parse(data);
+            console.log(result);
+            $("#operation-container").html(result.operation);
+            $("#solution-container").html(result.solution);
+          })
+          .fail(function (XMLHttpRequest, textStatus, errorThrown) {
+            console.log(XMLHttpRequest);
+            alert("error");
+          });
+      }
+    </script>
+  </body>
+</html>
